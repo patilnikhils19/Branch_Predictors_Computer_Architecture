@@ -57,7 +57,7 @@ struct entry_one_bit
     bool prediction;
     UINT64 tag;
     UINT64 ReplaceCount;
-    //UINT8 counter;
+    UINT8 counter;
 } BTB[BTB_SIZE];
 
 /* initialize the BTB */
@@ -71,7 +71,7 @@ VOID BTB_init()
         BTB[i].prediction = false;
         BTB[i].tag = 0;
         BTB[i].ReplaceCount = 0;
-        //BTB[i].counter = 0;
+        BTB[i].counter = 0;
     }
 
   // HINT: in the case of the two-bit predictor, you would just need to update the prediction
@@ -106,10 +106,10 @@ bool BTB_lookup(ADDRINT ins_ptr)
 
     if(BTB[index].valid)
         if(BTB[index].tag == ins_ptr)
-            {
+        {
             BTBHit++;
             return true;
-            }
+        }
     BTBMiss++;
     return false;
 }
@@ -121,7 +121,12 @@ bool BTB_prediction(ADDRINT ins_ptr)
 
     index = mask & ins_ptr;
 
-    return BTB[index].prediction;
+    if(BTB[index].counter > 1)
+        {return 1;}
+    else
+        {return 0;}
+
+    //return BTB[index].prediction;
 }
 
 /* update the BTB entry with the last result */
@@ -131,7 +136,28 @@ VOID BTB_update(ADDRINT ins_ptr, bool taken)
 
     index = mask & ins_ptr;
 
-    BTB[index].prediction = taken;
+    int  count;
+
+    count = BTB[index].counter;
+
+    if(taken)
+      {
+       count++;
+       if(count>3)
+        {count = 3;}
+       }
+
+     if(!taken)
+       {
+        count--;
+        if(count<0)
+         {count = 0;}
+       }
+//     cout << "c:" << count << endl;
+     BTB[index].counter = count;
+
+
+
 }
 
 /* insert a new branch in the table */
@@ -177,7 +203,7 @@ VOID WriteResults(bool limit_reached)
     out << "Count Replaced: " << CountReplaced << endl;
     out << "BTB Hit: " << BTBHit << endl;
     out << "BTB Miss: " << BTBMiss << endl;
-    out << "BTB Miss Rate: " << (float) 100*BTBMiss/(BTBHit+BTBMiss) << endl;
+    out << "BTB Miss Rate: " << (float) 100*BTBMiss/(BTBMiss+BTBHit) << endl;
     out << "Prediction Accuracy Percentage: " << (float) 100*CountCorrect/CountSeen << endl;
     for(i = 0; i < BTB_SIZE; i++)
     {
