@@ -1,0 +1,6 @@
+Implementation of Branch Predictors
+1. 1 bit Branch Predictor
+2. 2 bit Branch Predictor
+3. GAg 8,10,12 bit Branch Predictors
+4. PAg 10 bit branch Predictor
+5. Branch Predictor using Machine learning Perceptron.
